@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>婚礼抽奖 - 宾客登记</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #F4E8C1;
+            --navy: #1a1a2e;
+            --cream: #FDF5E6;
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background: linear-gradient(135deg, #f5f0eb 0%, #e8e0d5 100%);
+            min-height: 100vh;
+            color: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .wedding-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .floral-corner {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            opacity: 0.1;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 50 Q30 20 10 50 T50 90 Q70 60 90 50 T50 10' fill='%23D4AF37'/%3E%3Ccircle cx='50' cy='50' r='3' fill='%23D4AF37'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .floral-corner.top-left { top: -30px; left: -30px; }
+        .floral-corner.top-right { top: -30px; right: -30px; transform: rotate(90deg); }
+        .floral-corner.bottom-left { bottom: -30px; left: -30px; transform: rotate(-90deg); }
+        .floral-corner.bottom-right { bottom: -30px; right: -30px; transform: rotate(180deg); }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            border: 2px solid var(--gold-light);
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--navy);
+        }
+
+        .subtitle {
+            color: var(--gold);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-family: 'Cormorant Garamond', serif;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--gold) 0%, #B8941F 100%);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .question-box {
+            background: linear-gradient(135deg, #fff 0%, var(--cream) 100%);
+            border: 2px solid var(--gold);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--navy);
+            line-height: 1.4;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 2px solid var(--gold-light);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-family: 'Cormorant Garamond', serif;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .option-btn:hover {
+            background: var(--cream);
+            border-color: var(--gold);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .option-btn.wrong {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .result-text {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .error-box {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
+            color: #721c24;
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 30px 0;
+            color: var(--gold);
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .divider span {
+            padding: 0 20px;
+            font-size: 1.5rem;
+        }
+
+        .couple-names {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--gold);
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        @media (max-width: 480px) {
+            .card { padding: 30px 20px; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wedding-bg">
+        <div class="floral-corner top-left"></div>
+        <div class="floral-corner top-right"></div>
+        <div class="floral-corner bottom-left"></div>
+        <div class="floral-corner bottom-right"></div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <!-- 步骤1：输入姓名 -->
+            <div id="step-1" class="step active">
+                <h1>欢迎参加我们的婚礼</h1>
+                <div class="divider"><span>❦</span></div>
+                <p class="subtitle">请登记您的姓名参与幸运抽奖</p>
+                
+                <div class="form-group">
+                    <label>您的姓名</label>
+                    <input type="text" id="guest-name" placeholder="请输入真实姓名" maxlength="20">
+                </div>
+                
+                <button class="btn" onclick="submitName()">下一步</button>
+                <div class="couple-names">新郎 & 新娘 敬邀</div>
+            </div>
+
+            <!-- 步骤2：回答问题 -->
+            <div id="step-2" class="step">
+                <h1>答对即可参与抽奖</h1>
+                <div class="divider"><span>❦</span></div>
+                
+                <div class="question-box">
+                    <div class="question-text" id="question-text">加载中...</div>
+                    <div class="options" id="options-container">
+                        <!-- 动态生成选项 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤3：成功 -->
+            <div id="step-3" class="step">
+                <div class="success-box">
+                    <div class="result-icon">🎉</div>
+                    <div class="result-title">恭喜您！</div>
+                    <div class="result-text">
+                        <span id="success-name"></span>，您已成功加入抽奖池<br>
+                        请耐心等待抽奖环节开始<br>
+                        祝您好运！
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤4：失败 -->
+            <div id="step-4" class="step">
+                <div class="error-box">
+                    <div class="result-icon">😔</div>
+                    <div class="result-title">很遗憾</div>
+                    <div class="result-text">
+                        答错了，无法参与本次抽奖<br>
+                        不过您依然可以享受美好的婚礼时光！
+                    </div>
+                    <button class="btn" onclick="location.reload()" style="margin-top: 20px; background: #dc3545;">
+                        重新尝试
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤5：已参与 -->
+            <div id="step-5" class="step">
+                <div class="success-box" style="background: #fff3cd; border-color: #ffc107; color: #856404;">
+                    <div class="result-icon">✨</div>
+                    <div class="result-title">您已经参与过了</div>
+                    <div class="result-text">
+                        <span id="already-name"></span>，您已在抽奖池中<br>
+                        请勿重复登记
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEYS = {
+            QUESTIONS: 'wedding_questions_v2',
+            PARTICIPANTS: 'wedding_participants_v2',
+            WINNERS: 'wedding_winners_v2'
+        };
+
+        let currentQuestion = null;
+        let guestName = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否已参与
+            const urlParams = new URLSearchParams(window.location.search);
+            const checkName = urlParams.get('check');
+            
+            if (checkName) {
+                checkExisting(checkName);
+            }
+        });
+
+        function checkExisting(name) {
+            const participants = JSON.parse(localStorage.getItem(STORAGE_KEYS.PARTICIPANTS)) || [];
+            const existing = participants.find(p => p.name === name);
+            
+            if (existing) {
+                showStep(5);
+                document.getElementById('already-name').textContent = name;
+            }
+        }
+
+        function showStep(n) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step-${n}`).classList.add('active');
+        }
+
+        function submitName() {
+            const name = document.getElementById('guest-name').value.trim();
+            if (!name) {
+                alert('请输入您的姓名');
+                return;
+            }
+
+            // 检查是否已存在
+            const participants = JSON.parse(localStorage.getItem(STORAGE_KEYS.PARTICIPANTS)) || [];
+            if (participants.find(p => p.name === name)) {
+                showStep(5);
+                document.getElementById('already-name').textContent = name;
+                return;
+            }
+
+            guestName = name;
+            
+            // 获取题目
+            const questions = JSON.parse(localStorage.getItem(STORAGE_KEYS.QUESTIONS)) || [];
+            if (questions.length === 0) {
+                alert('主持人还未设置题目，请稍后再试');
+                return;
+            }
+
+            // 随机选择一题
+            currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+            
+            // 显示题目
+            document.getElementById('question-text').textContent = currentQuestion.text;
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            currentQuestion.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = `${String.fromCharCode(65 + idx)}. ${opt}`;
+                btn.onclick = () => checkAnswer(opt, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            showStep(2);
+        }
+
+        function checkAnswer(selected, btnElement) {
+            // 禁用所有按钮
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent.includes(currentQuestion.answer)) {
+                    btn.classList.add('correct');
+                }
+            });
+
+            if (selected === currentQuestion.answer) {
+                // 答对了
+                if (!btnElement.classList.contains('correct')) {
+                    btnElement.classList.add('correct');
+                }
+                
+                // 保存到参与者列表
+                const participants = JSON.parse(localStorage.getItem(STORAGE_KEYS.PARTICIPANTS)) || [];
+                participants.push({
+                    id: Date.now(),
+                    name: guestName,
+                    answered: true,
+                    answerTime: new Date().toISOString()
+                });
+                localStorage.setItem(STORAGE_KEYS.PARTICIPANTS, JSON.stringify(participants));
+                
+                // 触发同步
+                localStorage.setItem('wedding_sync_trigger', Date.now().toString());
+                
+                setTimeout(() => {
+                    document.getElementById('success-name').textContent = guestName;
+                    showStep(3);
+                }, 1000);
+            } else {
+                // 答错了
+                btnElement.classList.add('wrong');
+                setTimeout(() => {
+                    showStep(4);
+                }, 1000);
+            }
+        }
+
+        // 防止重复提交
+        document.getElementById('guest-name').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') submitName();
+        });
+    </script>
+</body>
+</html>
