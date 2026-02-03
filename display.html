@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>婚礼抽奖 - 现场展示</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #F4E8C1;
+            --navy: #1a1a2e;
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: white;
+            overflow: hidden;
+        }
+
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-decoration::before,
+        .bg-decoration::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            border-radius: 50%;
+        }
+
+        .bg-decoration::before {
+            top: -300px;
+            left: -300px;
+        }
+
+        .bg-decoration::after {
+            bottom: -300px;
+            right: -300px;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .wedding-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: var(--gold);
+            margin-bottom: 10px;
+            text-shadow: 0 2px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 5px;
+        }
+
+        .main-display {
+            text-align: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .status-text {
+            font-size: 1.3rem;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 30px;
+            min-height: 30px;
+        }
+
+        .rolling-container {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            border: 3px solid var(--gold);
+            border-radius: 30px;
+            padding: 60px;
+            margin: 30px 0;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 60px rgba(212, 175, 55, 0.2), inset 0 0 60px rgba(212, 175, 55, 0.05);
+        }
+
+        .rolling-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            color: white;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.8);
+            transition: all 0.1s ease;
+        }
+
+        .rolling-name.active {
+            transform: scale(1.05);
+            text-shadow: 0 0 50px rgba(212, 175, 55, 1);
+        }
+
+        .winners-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+            min-height: 100px;
+        }
+
+        .winner-card {
+            background: linear-gradient(135deg, var(--gold) 0%, #B8941F 100%);
+            color: var(--navy);
+            padding: 30px 50px;
+            border-radius: 20px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.4);
+            animation: winnerPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 3px solid rgba(255,255,255,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .winner-card::before {
+            content: '✦';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            opacity: 0.4;
+        }
+
+        @keyframes winnerPop {
+            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .pool-info {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.1);
+            padding: 15px 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .pool-info span {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .waiting-screen {
+            text-align: center;
+        }
+
+        .waiting-icon {
+            font-size: 6rem;
+            margin-bottom: 30px;
+            opacity: 0.5;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .waiting-text {
+            font-size: 2rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .controls {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: var(--gold);
+            color: var(--navy);
+        }
+
+        /* 礼花效果 */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        @media (max-width: 768px) {
+            .wedding-title { font-size: 2rem; }
+            .subtitle { font-size: 1rem; }
+            .rolling-name { font-size: 2.5rem; }
+            .winner-card { font-size: 1.5rem; padding: 20px 30px; }
+            .rolling-container { padding: 30px; }
+        }
+
+        /* 全屏按钮 */
+        .fullscreen-hint {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+    
+    <div class="controls">
+        <button class="control-btn" onclick="toggleFullscreen()">全屏</button>
+        <button class="control-btn" onclick="location.reload()">刷新</button>
+    </div>
+
+    <div class="fullscreen-hint">按 F11 进入全屏模式</div>
+
+    <div class="container">
+        <div class="header">
+            <div class="wedding-title">✦ 幸运大抽奖 ✦</div>
+            <div class="subtitle">WEDDING LUCKY DRAW</div>
+        </div>
+
+        <div class="main-display" id="main-display">
+            <!-- 等待状态 -->
+            <div class="waiting-screen" id="waiting-screen">
+                <div class="waiting-icon">💝</div>
+                <div class="waiting-text">等待抽奖开始...</div>
+            </div>
+
+            <!-- 抽奖状态 -->
+            <div id="lottery-screen" style="display: none;">
+                <div class="status-text" id="status-text">正在抽取幸运宾客</div>
+                <div class="rolling-container">
+                    <div class="rolling-name" id="rolling-name">???</div>
+                </div>
+                <div class="winners-container" id="winners-container"></div>
+            </div>
+        </div>
+
+        <div class="pool-info">
+            当前奖池：<span id="pool-count">0</span> 人
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEYS = {
+            PARTICIPANTS: 'wedding_participants_v2',
+            WINNERS: 'wedding_winners_v2',
+            DRAWING: 'wedding_drawing_state',
+            CURRENT_DRAW: 'wedding_current_draw'
+        };
+
+        let isDrawing = false;
+        let rollInterval = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePoolCount();
+            checkDrawingStatus();
+            
+            // 监听存储变化
+            window.addEventListener('storage', handleStorageChange);
+            
+            // 定期检查状态
+            setInterval(checkDrawingStatus, 500);
+            setInterval(updatePoolCount, 2000);
+        });
+
+        function handleStorageChange(e) {
+            if (e.key === 'wedding_sync_trigger' || e.key === STORAGE_KEYS.DRAWING) {
+                checkDrawingStatus();
+                updatePoolCount();
+            }
+        }
+
+        function updatePoolCount() {
+            const participants = JSON.parse(localStorage.getItem(STORAGE_KEYS.PARTICIPANTS)) || [];
+            const winners = JSON.parse(localStorage.getItem(STORAGE_KEYS.WINNERS)) || [];
+            const eligible = participants.filter(p => p.answered && !winners.find(w => w.id === p.id));
+            document.getElementById('pool-count').textContent = eligible.length;
+        }
+
+        function checkDrawingStatus() {
+            const drawing = localStorage.getItem(STORAGE_KEYS.DRAWING);
+            const currentDraw = JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_DRAW)) || {};
+            
+            if (drawing === 'true' && !isDrawing) {
+                // 开始抽奖动画
+                startRollingAnimation();
+            } else if (drawing === 'false' && isDrawing && currentDraw.finished) {
+                // 停止并显示结果
+                stopRollingAnimation(currentDraw);
+            }
+        }
+
+        function startRollingAnimation() {
+            isDrawing = true;
+            document.getElementById('waiting-screen').style.display = 'none';
+            document.getElementById('lottery-screen').style.display = 'block';
+            document.getElementById('winners-container').innerHTML = '';
+            
+            const participants = JSON.parse(localStorage.getItem(STORAGE_KEYS.PARTICIPANTS)) || [];
+            const winners = JSON.parse(localStorage.getItem(STORAGE_KEYS.WINNERS)) || [];
+            const eligible = participants.filter(p => p.answered && !winners.find(w => w.id === p.id));
+            
+            const rollingName = document.getElementById('rolling-name');
+            const statusText = document.getElementById('status-text');
+            
+            statusText.textContent = '正在抽取幸运宾客...';
+            
+            let speed = 50;
+            rollInterval = setInterval(() => {
+                if (eligible.length > 0) {
+                    const random = eligible[Math.floor(Math.random() * eligible.length)];
+                    rollingName.textContent = random.name;
+                    rollingName.classList.add('active');
+                    setTimeout(() => rollingName.classList.remove('active'), 50);
+                }
+            }, speed);
+        }
+
+        function stopRollingAnimation(drawData) {
+            isDrawing = false;
+            clearInterval(rollInterval);
+            
+            const rollingName = document.getElementById('rolling-name');
+            const statusText = document.getElementById('status-text');
+            const winnersContainer = document.getElementById('winners-container');
+            
+            rollingName.textContent = '恭喜！';
+            statusText.textContent = `本轮抽取 ${drawData.count} 位幸运儿`;
+            
+            // 显示中奖者
+            if (drawData.winners && drawData.winners.length > 0) {
+                winnersContainer.innerHTML = '';
+                drawData.winners.forEach((winner, index) => {
+                    setTimeout(() => {
+                        const card = document.createElement('div');
+                        card.className = 'winner-card';
+                        card.textContent = winner.name;
+                        winnersContainer.appendChild(card);
+                        createConfetti();
+                    }, index * 300);
+                });
+            }
+            
+            // 10秒后回到等待状态
+            setTimeout(() => {
+                if (!isDrawing) {
+                    document.getElementById('lottery-screen').style.display = 'none';
+                    document.getElementById('waiting-screen').style.display = 'block';
+                }
+            }, 10000);
+        }
+
+        function createConfetti() {
+            const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#ffffff'];
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.top = '-10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 10 + 5 + 'px';
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    const duration = Math.random() * 3 + 2;
+                    const xMove = (Math.random() - 0.5) * 200;
+                    
+                    confetti.animate([
+                        { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+                        { transform: `translate(${xMove}px, 100vh) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                    ], {
+                        duration: duration * 1000,
+                        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                    }).onfinish = () => confetti.remove();
+                }, i * 10);
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // F11 全屏提示
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
